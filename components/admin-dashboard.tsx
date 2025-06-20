@@ -12,27 +12,11 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Upload,
-  Plus,
-  X,
-  Video,
-  Users,
-  Settings,
-  Eye,
-  Trash2,
-  LogOut,
-  Shield,
-  Grid,
-  List,
-  BarChart3,
-  Tag,
-  ImageIcon,
-  Key,
-} from "lucide-react"
+import { Upload, Plus, X, Video, Users, Settings, Eye, Trash2, LogOut, Shield, Grid, List, BarChart3, Tag, ImageIcon, Key, Star } from 'lucide-react'
 import Link from "next/link"
 import ChangePasswordModal from "./change-password-modal"
 import SecurityDashboard from "./security-dashboard"
+import VideoCurationManager from "./video-curation-manager"
 
 interface VideoData {
   id: string
@@ -90,10 +74,17 @@ const CUSTOM_WEBSITE_PATTERNS = [
   },
   {
     name: "RedTube",
-    domain: "redtube.com",
-    patterns: [/^https?:\/\/(www\.)?redtube\.com\/(\d+)/, /^https?:\/\/embed\.redtube\.com\/\?id=(\d+)/],
-    embedTemplate: (id: string) => `https://embed.redtube.com/?id=${id}`,
-    example: "https://www.redtube.com/12345",
+    domain: "redtube.net",
+    patterns: [
+      /^https?:\/\/(www\.)?redtube\.com\/(\d+)/,
+      /^https?:\/\/(www\.)?redtube\.net\/(\d+)/,
+      /^https?:\/\/(www\.)?redtube\.com\/.*?\/(\d+)/,
+      /^https?:\/\/(www\.)?redtube\.net\/.*?\/(\d+)/,
+      /^https?:\/\/embed\.redtube\.net\/\?id=(\d+)/,
+    ],
+    embedTemplate: (id: string) => `https://embed.redtube.net/?id=${id}`,
+    example: "https://www.redtube.net/190774661 or https://www.redtube.com/12345",
+    requiresDirectAccess: true,
   },
   {
     name: "Xhamster",
@@ -121,6 +112,27 @@ const CUSTOM_WEBSITE_PATTERNS = [
     patterns: [/^https?:\/\/(www\.)?youporn\.com\/watch\/(\d+)\//, /^https?:\/\/(www\.)?youporn\.com\/embed\/(\d+)/],
     embedTemplate: (id: string) => `https://www.youporn.com/embed/${id}`,
     example: "https://www.youporn.com/watch/12345/",
+  },
+  {
+    name: "XNXX",
+    domain: "xnxx.com",
+    patterns: [
+      /^https?:\/\/(www\.)?xnxx\.com\/video-([a-zA-Z0-9]+)\//,
+      /^https?:\/\/(www\.)?xnxx\.com\/embedframe\/(\d+)/,
+    ],
+    embedTemplate: (id: string) => `https://www.xnxx.com/embedframe/${id}`,
+    example: "https://www.xnxx.com/video-abc123/",
+  },
+  {
+    name: "Lesbian8",
+    domain: "lesbian8.com",
+    patterns: [
+      /^https?:\/\/(www\.)?lesbian8\.com\/videos\/(\d+)\/[^/]*\/?$/,
+      /^https?:\/\/(www\.)?lesbian8\.com\/embed\/(\d+)/,
+    ],
+    embedTemplate: (id: string) => `https://www.lesbian8.com/embed/${id}`,
+    example: "https://www.lesbian8.com/videos/597458/video-title/",
+    requiresDirectAccess: true,
   },
   {
     name: "Generic Pattern",
@@ -348,7 +360,18 @@ export default function AdminDashboard() {
             }
           } else {
             // For specific sites, use the captured group as video ID
+            // Handle different capture group positions
             videoId = match[2] || match[1]
+
+            // Special handling for RedTube to ensure we get the right ID
+            if (site.name === "RedTube") {
+              // Extract just the numeric ID from various RedTube URL formats
+              const redtubeMatch = trimmedUrl.match(/(?:redtube\.(?:com|net))\/(?:.*\/)?(\d+)/)
+              if (redtubeMatch) {
+                videoId = redtubeMatch[1]
+              }
+            }
+
             return {
               embedUrl: site.embedTemplate(videoId),
               siteName: site.name,
@@ -570,11 +593,16 @@ export default function AdminDashboard() {
       return
     }
 
+    // Generate proper iframe embed code
+    const generateEmbedCode = (url: string) => {
+      return `<iframe src="${url}" frameborder="0" width="560" height="315" scrolling="no" allowfullscreen></iframe>`
+    }
+
     const newVideo: VideoData = {
       id: Date.now().toString(),
       title: videoTitle.trim(),
       description: videoDescription.trim(),
-      embedCode: `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`,
+      embedCode: generateEmbedCode(embedUrl),
       embedUrl: embedUrl,
       previewUrl: videoSource === "direct" ? embedUrl : undefined,
       thumbnail: thumbnailPreview || "/placeholder.svg?height=400&width=700",
@@ -697,7 +725,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-6 bg-zinc-900 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-7 bg-zinc-900 p-1 rounded-xl">
             <TabsTrigger
               value="overview"
               className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-zinc-300 data-[state=active]:bg-zinc-800 data-[state=active]:text-white rounded-lg"
@@ -739,6 +767,13 @@ export default function AdminDashboard() {
             >
               <Settings className="w-4 h-4" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger
+              value="curation"
+              className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-zinc-300 data-[state=active]:bg-zinc-800 data-[state=active]:text-white rounded-lg"
+            >
+              <Star className="w-4 h-4" />
+              Curation
             </TabsTrigger>
           </TabsList>
 
@@ -1660,6 +1695,11 @@ export default function AdminDashboard() {
               {/* Security Dashboard */}
               <SecurityDashboard />
             </div>
+          </TabsContent>
+
+          {/* Video Curation Tab */}
+          <TabsContent value="curation">
+            <VideoCurationManager />
           </TabsContent>
         </Tabs>
       </div>

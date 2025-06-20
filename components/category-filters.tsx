@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 const categories = [
   { id: "all", name: "All", active: true },
@@ -26,27 +25,38 @@ export default function CategoryFilters() {
   const [activeCategory, setActiveCategory] = useState("all")
 
   return (
-    <div className="flex items-center px-6 py-4">
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex space-x-3">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={activeCategory === category.id ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveCategory(category.id)}
-              className={
+    <div className="w-full max-w-full overflow-hidden px-0 py-2.5">
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-1">
+        {categories.map((category) => (
+          <Button
+            key={category.id}
+            variant={activeCategory === category.id ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setActiveCategory(category.id)}
+            className={`
+              whitespace-nowrap flex-shrink-0 transition-colors
+              px-3 py-1.5 text-xs h-8 min-w-fit
+              sm:px-4 sm:py-2 sm:text-sm sm:h-10
+              ${
                 activeCategory === category.id
-                  ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 whitespace-nowrap px-4 py-2 border border-zinc-300"
-                  : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700 whitespace-nowrap px-4 py-2"
+                  ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 border border-zinc-300"
+                  : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
               }
-            >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" className="invisible" />
-      </ScrollArea>
+            `}
+          >
+            {category.name}
+          </Button>
+        ))}
+      </div>
     </div>
   )
 }

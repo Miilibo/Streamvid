@@ -7,7 +7,7 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-950">
       <MainHeader />
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 max-w-full overflow-hidden">
         <div className="mb-6">
           <CategoryFilters />
         </div>
