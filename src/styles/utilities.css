@@ -1,0 +1,32 @@
+/* Utility classes */
+
+/* Spacing utilities */
+.container-padding {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Text utilities */
+.text-gradient {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* Animation utilities */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-blue-600;
+}

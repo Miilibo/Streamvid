@@ -1,0 +1,32 @@
+/* Component-specific styles */
+
+/* Button variants */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white;
+}
+
+.btn-secondary {
+  @apply bg-gray-600 hover:bg-gray-700 text-white;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white dark:bg-zinc-800 rounded-lg shadow-md;
+}
+
+/* Form styles */
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-md 
+         bg-white dark:bg-zinc-700 text-gray-900 dark:text-white
+         focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Navigation styles */
+.nav-link {
+  @apply text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 
+         transition-colors duration-200;
+}
+
+.nav-link.active {
+  @apply text-blue-600 dark:text-blue-400;
+}

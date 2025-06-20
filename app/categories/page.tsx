@@ -1,69 +1,72 @@
-import MainHeader from "@/components/main-header"
+"use client"
+
+import MainHeader from "@/src/components/layout/main-header"
 import Link from "next/link"
 import Image from "next/image"
 import { Play, Video } from "lucide-react"
-
-// Category definitions with thumbnails and metadata
-const categories = [
-  {
-    slug: "travel",
-    name: "Travel",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Travel+Adventures",
-    color: "bg-blue-500",
-    videoCount: 12,
-  },
-  {
-    slug: "cooking",
-    name: "Cooking",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Cooking+Masterclass",
-    color: "bg-orange-500",
-    videoCount: 8,
-  },
-  {
-    slug: "technology",
-    name: "Technology",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Tech+Reviews",
-    color: "bg-indigo-500",
-    videoCount: 15,
-  },
-  {
-    slug: "fitness",
-    name: "Fitness",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Fitness+Training",
-    color: "bg-green-500",
-    videoCount: 10,
-  },
-  {
-    slug: "education",
-    name: "Education",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Educational+Content",
-    color: "bg-purple-500",
-    videoCount: 18,
-  },
-  {
-    slug: "entertainment",
-    name: "Entertainment",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Entertainment+Hub",
-    color: "bg-pink-500",
-    videoCount: 22,
-  },
-  {
-    slug: "gaming",
-    name: "Gaming",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Gaming+Zone",
-    color: "bg-red-500",
-    videoCount: 14,
-  },
-  {
-    slug: "lifestyle",
-    name: "Lifestyle",
-    thumbnail: "/placeholder.svg?height=200&width=300&text=Lifestyle+Tips",
-    color: "bg-teal-500",
-    videoCount: 9,
-  },
-]
+import { useState, useEffect } from "react"
+import type { Category } from "@/src/types"
+import { INITIAL_VIDEO_CATEGORIES } from "@/src/lib/constants"
 
 export default function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    // Load categories from localStorage (admin dashboard)
+    const savedCategories = localStorage.getItem("videoCategories")
+    const savedVideos = localStorage.getItem("uploadedVideos")
+
+    let loadedCategories: Category[] = []
+
+    if (savedCategories) {
+      loadedCategories = JSON.parse(savedCategories)
+    } else {
+      // Use default categories if none are saved
+      loadedCategories = INITIAL_VIDEO_CATEGORIES
+    }
+
+    // Calculate video counts for each category
+    if (savedVideos) {
+      const videos = JSON.parse(savedVideos)
+      loadedCategories = loadedCategories.map((category) => ({
+        ...category,
+        videoCount: videos.filter((video: any) => video.category === category.id).length,
+      }))
+    }
+
+    setCategories(loadedCategories)
+
+    // Listen for category updates
+    const handleCategoryUpdate = () => {
+      const updatedCategories = localStorage.getItem("videoCategories")
+      const updatedVideos = localStorage.getItem("uploadedVideos")
+
+      if (updatedCategories) {
+        let cats = JSON.parse(updatedCategories)
+
+        // Update video counts
+        if (updatedVideos) {
+          const videos = JSON.parse(updatedVideos)
+          cats = cats.map((category: Category) => ({
+            ...category,
+            videoCount: videos.filter((video: any) => video.category === category.id).length,
+          }))
+        }
+
+        setCategories(cats)
+      }
+    }
+
+    // Listen for storage changes and custom events
+    window.addEventListener("storage", handleCategoryUpdate)
+    window.addEventListener("categoryUpdate", handleCategoryUpdate)
+
+    return () => {
+      window.removeEventListener("storage", handleCategoryUpdate)
+      window.removeEventListener("categoryUpdate", handleCategoryUpdate)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <MainHeader />
@@ -77,8 +80,8 @@ export default function CategoriesPage() {
         {/* Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {categories.map((category) => (
-            <div key={category.slug} className="group cursor-pointer">
-              <Link href={`/category/${category.slug}`}>
+            <div key={category.id} className="group cursor-pointer">
+              <Link href={`/category/${category.id}`}>
                 <div className="relative aspect-video overflow-hidden rounded-lg bg-zinc-800">
                   <Image
                     src={category.thumbnail || "/placeholder.svg"}
@@ -91,13 +94,13 @@ export default function CategoriesPage() {
                   </div>
                   <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                     <Video className="w-4 h-4" />
-                    {category.videoCount}
+                    {category.videoCount || 0}
                   </div>
                 </div>
               </Link>
 
               <div className="mt-3">
-                <Link href={`/category/${category.slug}`}>
+                <Link href={`/category/${category.id}`}>
                   <h3 className="font-medium text-white line-clamp-2 text-sm leading-5 group-hover:text-blue-400 transition-colors">
                     {category.name}
                   </h3>
@@ -106,6 +109,15 @@ export default function CategoriesPage() {
             </div>
           ))}
         </div>
+
+        {categories.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-zinc-400 mb-4">No categories available</div>
+            <p className="text-sm text-zinc-500">
+              Categories will appear here once they are created in the admin dashboard.
+            </p>
+          </div>
+        )}
       </main>
     </div>
   )

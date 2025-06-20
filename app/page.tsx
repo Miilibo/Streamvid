@@ -1,6 +1,6 @@
-import MainHeader from "@/components/main-header"
-import CategoryFilters from "@/components/category-filters"
-import VideoGrid from "@/components/video-grid"
+import MainHeader from "@/src/components/layout/main-header"
+import CategoryFilters from "@/src/components/video/category-filters"
+import VideoGrid from "@/src/components/video/video-grid"
 
 export default function Home() {
   return (
